@@ -27,29 +27,35 @@ class Model extends EventEmitter {
                 completed: false,
             }
             this.todoItems.push(todo);
-            console.log(this.todoItems);
+            this.emit('itemAdded', item);
             return todo;
         }
-        this.emit('itemAdded', item);
     }
 
     toggleCheckTodo(id) {
         this.todoItems.forEach(function (item) {
             if (item.id == id) {
                 item.completed = !item.completed;
-                this.emit('itemChecked');
             }
         });
-        console.log(this.todoItems);
-
+        this.emit('itemChecked');
     }
 
     removeTodo(id) {
         this.todoItems = this.todoItems.filter(function (item) {
             return item.id != id;
         });
-        console.log(this.todoItems);
         this.emit('itemRemoved');
+    }
+
+    getTodoId (elem) {
+        this.todoItems.forEach(function(item) {
+            if (elem.dataset.name == item.name) {
+                elem.setAttribute('data-key', `${item.id}`);
+                console.log(elem.dataset.key);
+            }
+            return (elem.dataset.key);
+        })
     }
 }
 
@@ -98,36 +104,33 @@ class View extends EventEmitter{
         })
     }
 
-
     handleDeleteTodo () {
         this.inputWrapper.addEventListener("click", event => {
             if (event.target.className === "delete-button") {
-                this.emit('deleteButtonClicked');
                 let elem = event.target.closest('div');
                 let inputRadio = elem.firstChild;
                 if (inputRadio.checked) {
                     elem.remove();
+                    this.emit('deleteButtonClicked');
                 }
             }
         })
     }
 
-    handleToggleTodo () {
+    handleToggleTodo (elem) {
         this.inputWrapper.addEventListener("click", event => {
             if (event.target.className === "checkbox") {
                 this.emit('checkboxClicked');
-                let elem = event.target.closest('div');
+                elem = event.target.closest('div');
+                elem.classList.add("toggled");
 
                 let inputRadio = elem.firstChild;
                 let textLine = elem.lastChild;
                 if (inputRadio.checked) {
                     textLine.classList.add("checked");
-                    elem.classList.add("current");
                 } else {
                     textLine.classList.remove("checked");
-                    elem.classList.remove("current");
                 }
-                return elem;
             }
         })
     }
@@ -138,30 +141,28 @@ class Controller {
         this.model = model;
         this.view = view;
 
-        // model.on('itemAdded', () => this.addItem());
-        // model.on('itemRemoved', () => this.addItem());
-        // model.on('itemChecked', () => this.toggleItem());
-
         view.on('addButtonClicked',  () => this.model.addTodo(this.view.input.value));
         view.on('deleteButtonClicked', () => this.model.removeTodo(this.getId()));
-        view.on('checkboxClicked', () => this.model.toggleCheckTodo(this.getId()));
+        view.on('checkboxClicked', () => console.log(this.getCurrentElemId()));
 
+
+        model.on('itemAdded', () => this.showUpdatedData());
+        model.on('itemRemoved', () => this.showUpdatedData());
+        model.on('itemChecked', () => this.showUpdatedData());
     }
 
-    getId () {
-        this.view.inputWrapper.addEventListener("dblclick", event => {
-            if (event.target.className === "checkbox") {
-                let elem = event.target.closest('div');
-                console.log(elem);
-                this.model.todoItems.forEach(function(item) {
-                    if (elem.dataset.name === item.name) {
-                        elem.setAttribute('data-key', `${item.id}`);
-                        console.log(elem.dataset.key);
-                        return (elem.dataset.key);
-                    }
-                })
-            }
-        })
+
+
+    showUpdatedData () {
+        console.log (this.model.todoItems);
+    }
+
+
+    //  здесь не понимаю как получить элемент и его id
+    getCurrentElemId () {
+    let currentElem = document.querySelector(".toggled")
+        console.log (currentElem);  //  null - почему?
+    this.model.getTodoId(currentElem);
     }
 
 
@@ -182,4 +183,5 @@ const myTodoList = new Controller(new Model(), new View());
 myTodoList.addItem();
 myTodoList.deleteItem();
 myTodoList.toggleItem();
+
 
