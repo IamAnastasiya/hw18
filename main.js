@@ -142,8 +142,8 @@ class Controller {
         this.view = view;
 
         view.on('addButtonClicked',  () => this.model.addTodo(this.view.input.value));
-        view.on('deleteButtonClicked', () => this.model.removeTodo(this.getId()));
-        view.on('checkboxClicked', () => console.log(this.getCurrentElemId()));
+        view.on('deleteButtonClicked', () => this.model.removeTodo(this.getCurrentElemId()));
+        view.on('checkboxClicked', () => this.model.toggleCheckTodo(this.getCurrentElemId()));
 
 
         model.on('itemAdded', () => this.showUpdatedData());
