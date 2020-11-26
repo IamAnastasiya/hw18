@@ -28,27 +28,20 @@ class Model extends EventEmitter {
             }
             this.todoItems.push(todo);
             console.log(this.todoItems);
+            return todo;
         }
         this.emit('itemAdded', item);
-    }
-
-    getTodoId (elem) {
-        this.todoItems.forEach(function (item) {
-            if (elem.dataset.name === item.name) {
-                elem.setAttribute('data-key', item.id);
-                return item.id;
-            }
-        })
     }
 
     toggleCheckTodo(id) {
         this.todoItems.forEach(function (item) {
             if (item.id == id) {
                 item.completed = !item.completed;
+                this.emit('itemChecked');
             }
         });
         console.log(this.todoItems);
-        this.emit('itemChecked');
+
     }
 
     removeTodo(id) {
@@ -60,13 +53,12 @@ class Model extends EventEmitter {
     }
 }
 
+
 class View extends EventEmitter{
     constructor() {
-
         super();
         this.inputWrapper = document.querySelector('.input-wrapper');
         this.input = document.querySelector('.input');
-
     }
 
 
@@ -81,7 +73,7 @@ class View extends EventEmitter{
 
         let newTask = this.createElement("div", "list-item")
         this.inputWrapper.append(newTask);
-        newTask.setAttribute('data-name', this.input.value);
+        newTask.setAttribute('data-name', `${this.input.value}`);
 
         let textLine = this.createElement("p", "text-item")
         textLine.innerHTML = this.input.value;
@@ -94,7 +86,6 @@ class View extends EventEmitter{
         let deleteButton = this.createElement("button", "delete-button");
         deleteButton.innerHTML = "x";
         textLine.append(deleteButton);
-
     }
 
     handleAddTodo () {
@@ -119,7 +110,6 @@ class View extends EventEmitter{
                 }
             }
         })
-
     }
 
     handleToggleTodo () {
@@ -127,18 +117,20 @@ class View extends EventEmitter{
             if (event.target.className === "checkbox") {
                 this.emit('checkboxClicked');
                 let elem = event.target.closest('div');
-                let inputRadio = elem.firstChild;
-                let textLine = elem.lastChild
 
+                let inputRadio = elem.firstChild;
+                let textLine = elem.lastChild;
                 if (inputRadio.checked) {
                     textLine.classList.add("checked");
+                    elem.classList.add("current");
                 } else {
                     textLine.classList.remove("checked");
+                    elem.classList.remove("current");
                 }
+                return elem;
             }
         })
     }
-
 }
 
 class Controller {
@@ -146,36 +138,47 @@ class Controller {
         this.model = model;
         this.view = view;
 
-        view.on('addButtonClicked',  () => this.addItem());
-        view.on('deleteButtonClicked', () => this.deleteItem());
-        view.on('checkboxClicked', () => this.toggleItem());
+        // model.on('itemAdded', () => this.addItem());
+        // model.on('itemRemoved', () => this.addItem());
+        // model.on('itemChecked', () => this.toggleItem());
 
-        model.on('itemAdded', () => this.view.handleAddTodo());
-        model.on('itemRemoved', () => this.view.handleDeleteTodo());
-        model.on('itemChecked', () => this.view.handleToggleTodo());
+        view.on('addButtonClicked',  () => this.model.addTodo(this.view.input.value));
+        view.on('deleteButtonClicked', () => this.model.removeTodo(this.getId()));
+        view.on('checkboxClicked', () => this.model.toggleCheckTodo(this.getId()));
+
+    }
+
+    getId () {
+        this.view.inputWrapper.addEventListener("dblclick", event => {
+            if (event.target.className === "checkbox") {
+                let elem = event.target.closest('div');
+                console.log(elem);
+                this.model.todoItems.forEach(function(item) {
+                    if (elem.dataset.name === item.name) {
+                        elem.setAttribute('data-key', `${item.id}`);
+                        console.log(elem.dataset.key);
+                        return (elem.dataset.key);
+                    }
+                })
+            }
+        })
     }
 
 
     addItem = () => {
-        this.model.addTodo(this.view.input.value);
+        this.view.handleAddTodo();
     }
-
 
     deleteItem = () => {
-        // чтоб получить id - нужно получить элемент - не понимаю как здесь до него добраться, опять вешать addEventListener ведь неправильно?
-        // let currentId = this.model.getTodoId();
-        // this.model.removeTodo(currentId)
+        this.view.handleDeleteTodo();
     }
 
-
     toggleItem = () => {
-        // аналогично
-        // let currentId = this.model.getTodoId();
-        // this.model.toggleCheckTodo(currentId)
+        this.view.handleToggleTodo();
     }
 }
 
-const myTodoList = new Controller(new Model(), new View())
+const myTodoList = new Controller(new Model(), new View());
 myTodoList.addItem();
 myTodoList.deleteItem();
 myTodoList.toggleItem();
