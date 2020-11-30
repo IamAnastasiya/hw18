@@ -47,6 +47,18 @@ class Model extends EventEmitter {
         this.emit('itemRemoved');
     }
 
+    editTodo(id, updatedText) {
+        // this.todoItems.forEach(function (item) {
+        //     if (item.id == id) {
+        //         item.name = updatedText;
+        //     }
+        // });
+        this.todoItems = this.todoItems.map((todo) =>
+            todo.id == id ? {id: todo.id, name: updatedText, completed: false} : todo,
+        )
+        this.emit('itemEdited');
+    }
+
     setTodoId (elem) {
         this.todoItems.forEach(function(item) {
             if (elem.dataset.name == item.name) {
@@ -62,6 +74,7 @@ class View extends EventEmitter{
         super();
         this.inputWrapper = document.querySelector('.input-wrapper');
         this.input = document.querySelector('.input');
+        this.editBtn = document.querySelector('.edit-btn');
         this.model = model;
     }
 
@@ -81,8 +94,9 @@ class View extends EventEmitter{
         newTask.setAttribute('data-name', `${this.input.value}`);
         this.model.setTodoId(newTask);
 
-        let textLine = this.createElement("p", "text-item")
-        textLine.innerHTML = this.input.value;
+        let textLine = this.createElement("input", "text-item");
+        textLine.setAttribute("readonly", true);
+        textLine.value = this.input.value;
         newTask.append(textLine);
 
         let inputRadio = this.createElement("input", "checkbox");
@@ -91,7 +105,7 @@ class View extends EventEmitter{
 
         let deleteButton = this.createElement("button", "delete-button");
         deleteButton.innerHTML = "x";
-        textLine.append(deleteButton);
+        newTask.append(deleteButton);
     }
 
     handleAddTodo () {
@@ -101,6 +115,35 @@ class View extends EventEmitter{
                 this.createTodoItems();
                 this.input.value = "";
             }
+        })
+    }
+
+    handleEditTodo() {
+        let saveButton;
+        let textLine;
+
+        this.inputWrapper.addEventListener("dblclick", event => {
+            if (event.target.className !== "checkbox" && event.target.className !== "delete-button") {
+                let elem = event.target.closest('div');
+                textLine = elem.childNodes[1];
+                textLine.removeAttribute("readonly", true);
+
+                saveButton = this.createElement("button", "save-button");
+                saveButton.innerHTML = "SAVE";
+                elem.append(saveButton);
+            }
+        })
+        this.inputWrapper.addEventListener("click", event => {
+           if (event.target.className === "save-button") {
+               let elem = event.target.closest('div');
+               let updatedText = textLine.value;
+               textLine.setAttribute("readonly", true);
+               event.target.style.display = "none";
+               console.log (updatedText);
+               this.emit('editButtonClicked', elem, updatedText);
+               return updatedText;
+            }
+
         })
     }
 
@@ -123,9 +166,9 @@ class View extends EventEmitter{
 
                 let elem = event.target.closest('div');
                 this.emit('checkboxClicked', elem);
-
                 let inputRadio = elem.firstChild;
-                let textLine = elem.lastChild;
+                let textLine = elem.childNodes[1];
+
                 if (inputRadio.checked) {
                     textLine.classList.add("checked");
                 } else {
@@ -145,11 +188,12 @@ class Controller {
         view.on('addButtonClicked',  () => this.model.addTodo(this.view.input.value));
         view.on('deleteButtonClicked', (elem) => this.model.removeTodo(elem.dataset.key));
         view.on('checkboxClicked', (elem) => this.model.toggleCheckTodo(elem.dataset.key));
-
+        view.on('editButtonClicked', (elem, updatedText) => this.model.editTodo(elem.dataset.key, updatedText));
 
         model.on('itemAdded', () => this.showUpdatedData());
         model.on('itemRemoved', () => this.showUpdatedData());
         model.on('itemChecked', () => this.showUpdatedData());
+        model.on('itemEdited', () => this.showUpdatedData());
     }
 
     showUpdatedData () {
@@ -167,6 +211,12 @@ class Controller {
     toggleItem = () => {
         this.view.handleToggleTodo();
     }
+
+    editItem = () => {
+        this.view.handleEditTodo();
+    }
+
+
 }
 
 let model = new Model();
@@ -175,7 +225,7 @@ const myTodoList = new Controller(model, view);
 myTodoList.addItem();
 myTodoList.deleteItem();
 myTodoList.toggleItem();
-
+myTodoList.editItem();
 
 
 
