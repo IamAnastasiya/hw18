@@ -48,11 +48,6 @@ class Model extends EventEmitter {
     }
 
     editTodo(id, updatedText) {
-        // this.todoItems.forEach(function (item) {
-        //     if (item.id == id) {
-        //         item.name = updatedText;
-        //     }
-        // });
         this.todoItems = this.todoItems.map((todo) =>
             todo.id == id ? {id: todo.id, name: updatedText, completed: false} : todo,
         )
