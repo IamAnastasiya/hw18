@@ -47,6 +47,7 @@ body {
     margin-right: 15px;
     display: flex;
     position: relative;
+    overflow: hidden;
 }
 
 .text-item {
@@ -55,6 +56,17 @@ body {
     color: #777777;
     padding-bottom: 1px;
     margin: 0;
+    border: none;
+    outline: none;
+}
+
+.edited-text {
+    outline: none;
+    border: none;
+    /*padding: 10px;*/
+    font-family: Cambria, sans-serif;
+    font-size: 20px;
+    color: #777777;
 }
 
 .checked {
@@ -68,7 +80,6 @@ body {
 }
 
 .delete-button {
-    /*display: none;*/
     position: absolute;
     right: 10px;
     cursor: pointer;
@@ -81,3 +92,19 @@ body {
     font-weight: 700;
     color: red;
 }
+
+.save-button {
+    position: absolute;
+    right: 40px;
+    cursor: pointer;
+    background-color: #ffffff;
+    border: 1px solid green;
+    outline: none;
+    padding: 2px 5px;
+    margin-left: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    color: green;
+}
+
+
