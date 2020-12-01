@@ -8,8 +8,8 @@ class EventEmitter {
         (this._events[evt] || (this._events[evt] = [])).push(listener);
         return this;
     }
-    emit(evt, arg) {
-        (this._events[evt] || []).slice().forEach(lsn => lsn(arg));
+    emit(evt, ...args) {
+        (this._events[evt] || []).slice().forEach(lsn => lsn(...args));
     }
 }
 
@@ -48,6 +48,11 @@ class Model extends EventEmitter {
     }
 
     editTodo(id, updatedText) {
+        // this.todoItems.forEach(function (item) {
+        //     if (item.id == id) {
+        //         item.name = updatedText;
+        //     }
+        // });
         this.todoItems = this.todoItems.map((todo) =>
             todo.id == id ? {id: todo.id, name: updatedText, completed: false} : todo,
         )
@@ -135,7 +140,7 @@ class View extends EventEmitter{
                textLine.setAttribute("readonly", true);
                event.target.style.display = "none";
                console.log (updatedText);
-               this.emit('editButtonClicked', elem, updatedText);
+               this.emit('editButtonClicked', [elem, updatedText]);
                return updatedText;
             }
 
@@ -183,7 +188,7 @@ class Controller {
         view.on('addButtonClicked',  () => this.model.addTodo(this.view.input.value));
         view.on('deleteButtonClicked', (elem) => this.model.removeTodo(elem.dataset.key));
         view.on('checkboxClicked', (elem) => this.model.toggleCheckTodo(elem.dataset.key));
-        view.on('editButtonClicked', (elem, updatedText) => this.model.editTodo(elem.dataset.key, updatedText));
+        view.on('editButtonClicked', (args) => this.model.editTodo(args[0].dataset.key, args[1]));
 
         model.on('itemAdded', () => this.showUpdatedData());
         model.on('itemRemoved', () => this.showUpdatedData());
